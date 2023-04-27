@@ -1,0 +1,31 @@
+SELECT * FROM tab;
+
+DESC student;
+
+Select deptno 학과번호, dname 이름, college 소속대학, loc 위치
+From department;
+
+Select * From student;
+
+select distinct deptno from student;
+
+select distinct deptno,grade from student;
+
+select studno || '학번 '|| name || '입니다' "Student(학생)" from student;
+
+select name || '의 키는 '||height||',  몸무게는 '||weight "학생 키, 몸무게" from student;
+
+desc student;
+
+alter table student modify name varchar(40);
+
+--scott
+select * from tab;
+select * from emp;
+
+--global
+select weight, weight *2.2 weight_pound
+from student;
+
+desc professor;
+select name,sal, sal*12+100 "연봉" from professor;
