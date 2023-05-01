@@ -1,0 +1,15 @@
+--코테 리뷰
+--테이블 2개 있었고
+-- branches id(근미지 주소 번호) 주소이름  세부주소
+--employees id name 월급 (근무지 주소 번호)
+
+--문제 : 전체 직원 월급평균 보다 근무지 평균월급이 더 비싼지역을 근무지 오름차순으로 찾기
+--  ex( 1(근무지 id) 강남(주소이름) 그지역의 평균 월급
+-- 평균값은 소수점 첫번째 자리에서 반올림
+
+SELECT AVG(sal)
+FROM emp;
+
+SELECT * FROM emp;
+SELECT * FROM tab;
+SELECT * FROM dept;
