@@ -1,0 +1,10 @@
+데이터의 집합 -> 표
+표의 집합 -> 스키마(database)
+스키마의 집합 -> database 서버
+
+mysql실행방법
+cmd에서 mysql server/bin 이동 후
+
+> mysql -uroot -p
+	ㄴ mysql폴더를 uroot(관리자권한으로) -p (비밀번호 입력을 통해 DB서버에 접속
+
