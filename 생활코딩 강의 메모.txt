@@ -2,9 +2,113 @@
 표의 집합 -> 스키마(database)
 스키마의 집합 -> database 서버
 
+database 서버 와 client
+> mysql -uroot -p 을 통해 database 서버를 직접 다루는 것 같지만
+사실 client가 서버에 접근하는 방식임
+ mysql workbench, cmd(MYsql monitor)에서 한것은 cilent임
 mysql실행방법
-cmd에서 mysql server/bin 이동 후
+	cmd에서 mysql server/bin 이동 후
 
-> mysql -uroot -p
-	ㄴ mysql폴더를 uroot(관리자권한으로) -p (비밀번호 입력을 통해 DB서버에 접속
+	> mysql -uroot -p
+		ㄴ mysql폴더를 uroot(관리자권한으로) -p (비			밀번호 입력을 통해 DB서버에 접속
 
+		문법 헷갈릴때 cheetsheet 검색하면 좋음
+
+테이블 생성
+	CREATE TABLE topic(
+	    -> id INT(11) NOT NULL AUTO_INCREAMENT
+					ㄴ 자동증가
+
+	TEXT type은(65335)크기 char 저장 가능
+
+
+테이블 데이터 추가
+
+
+mysql> INSERT INTO topic (title,description,created,author,profile) VALUES('MySQL','MySQL is ...',NOW(),'egoing','developer');
+검색
+
+SELECT "egoing",1+1
+
++--------+-----+
+| egoing | 1+1 |
++--------+-----+
+| egoing |   2 |
++--------+-----+
+
+mysql> SELECT id,title,created,author FROM topic WHERE author='egoing'
+    -> ORDER BY id DESC;
++----+---------+---------------------+--------+
+| id | title   | created             | author |
++----+---------+---------------------+--------+
+|  5 | MongoDB | 2023-06-11 15:17:11 | egoing |
+|  2 | ORACLE  | 2023-06-11 15:14:21 | egoing |
+|  1 | MySQL   | 2023-06-11 15:11:44 | egoing |
++----+---------+---------------------+--------+
+3 rows in set (0.00 sec)
+
+mysql> SELECT id,title,created,author FROM topic WHERE author='egoing'
+    -> ORDER BY id DESC LIMIT 2;
++----+---------+---------------------+--------+
+| id | title   | created             | author |
++----+---------+---------------------+--------+
+|  5 | MongoDB | 2023-06-11 15:17:11 | egoing |
+|  2 | ORACLE  | 2023-06-11 15:14:21 | egoing |
++----+---------+---------------------+--------+ 
+
+UPDATE
+
+mysql> UPDATE topic SET description='Oracle is ..',title='Oracle'
+    -> WHERE id = 2;
+Query OK, 1 row affected (0.01 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> SELECT * FROM topic;
++----+------------+--------------------+---------------------+--------+---------------------------+
+| id | title      | description        | created             | author | profile                   |
++----+------------+--------------------+---------------------+--------+---------------------------+
+|  1 | MySQL      | MySQL is ...       | 2023-06-11 15:11:44 | egoing | developer                 |
+|  2 | Oracle     | Oracle is ..       | 2023-06-11 15:14:21 | egoing | developer                 |
+|  3 | SQL Server | SQL Server is ...  | 2023-06-11 15:15:55 | duru   | database administrator    |
+|  4 | PostgreSQL | Postgre SQL is ... | 2023-06-11 15:16:39 | taeho  | data scientist, developer |
+|  5 | MongoDB    | MongoDB is ...     | 2023-06-11 15:17:11 | egoing | developer                 |
++----+------------+--------------------+---------------------+--------+
+
+ 수정 중 주의할것 where 절 빠뜨리면 전체 수정됨
+
+관계형 데이터베이스의 필요성
+  -> 수정시 중복되는 많은 데이터를 수정해야함
+  -> 중복되는 데이터가 많으면 유지 보수가 어렵기 때문에
+      테이블을 분리시켜 관리해줘야 함
+  cf) 단 테이블을 많이 분리 하게 되면 데이터를 직관적으로 해석하       기 어려워짐
+      -> 이를 해결하기 위해 검색시 같이보이게 할 수 있다.
+  ex) 예제 author을 분리하기
+      -> 기존의 topic을 RENAME TABLE topic to topic_backup;
+          을 통해 백업
+     -> 2개의 테이블로 생성 후 VALUE 값 추가
+    -> 기존 topic 테이블의 author 부분을 author_id로 대체
+
+mysql> SELECT * FROM topic LEFT JOIN author ON topic.author_id = author.id;
++----+------------+-------------------+---------------------+-----------+------+--------+---------------------------+
+| id | title      | description       | created             | author_id | id   | name   | profile                   |
++----+------------+-------------------+---------------------+-----------+------+--------+---------------------------+
+|  1 | MySQL      | MySQL is...       | 2018-01-01 12:10:11 |         1 |    1 | egoing | developer                 |
+|  2 | Oracle     | Oracle is ...     | 2018-01-03 13:01:10 |         1 |    1 | egoing | developer                 |
+|  3 | SQL Server | SQL Server is ... | 2018-01-20 11:01:10 |         2 |    2 | duru   | database administrator    |
+|  4 | PostgreSQL | PostgreSQL is ... | 2018-01-23 01:03:03 |         3 |    3 | taeho  | data scientist, developer |
+|  5 | MongoDB    | MongoDB is ...    | 2018-01-30 12:31:03 |         1 |    1 | egoing | developer                 |
++----+------------+-------------------+---------------------+-----------+------+--------+---------------------------+
+5 rows in set (0.00 sec)
+
+더 좋게 출력
+mysql> SELECT topic.id "topic_id",title,description,created,name,profile FROM topic LEFT JOIN author ON topic.author_id = author.id;
++----------+------------+-------------------+---------------------+--------+---------------------------+
+| topic_id | title      | description       | created             | name   | profile                   |
++----------+------------+-------------------+---------------------+--------+---------------------------+
+|        1 | MySQL      | MySQL is...       | 2018-01-01 12:10:11 | egoing | developer                 |
+|        2 | Oracle     | Oracle is ...     | 2018-01-03 13:01:10 | egoing | developer                 |
+|        3 | SQL Server | SQL Server is ... | 2018-01-20 11:01:10 | duru   | database administrator    |
+|        4 | PostgreSQL | PostgreSQL is ... | 2018-01-23 01:03:03 | taeho  | data scientist, developer |
+|        5 | MongoDB    | MongoDB is ...    | 2018-01-30 12:31:03 | egoing | developer                 |
++----------+------------+-------------------+---------------------+--------+---------------------------+
+5 rows in set (0.00 sec)
