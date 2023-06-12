@@ -6,6 +6,9 @@ database 서버 와 client
 > mysql -uroot -p 을 통해 database 서버를 직접 다루는 것 같지만
 사실 client가 서버에 접근하는 방식임
  mysql workbench, cmd(MYsql monitor)에서 한것은 cilent임
+ 즉, 어떤 client를 쓰던간에 sql을 서버에 전송하여 
+ DB 서버를 제어함
+
 mysql실행방법
 	cmd에서 mysql server/bin 이동 후
 
