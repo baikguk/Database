@@ -1,0 +1,178 @@
+--CASE 
+--SELECT 위치에서 사용
+-- CASE WHEN [(컬럼,값) 조건] then [결과값]..else END
+SELECT name, deptno, sal, 
+CASE WHEN deptno=101 then sal*1.1
+END  보너스
+from professor;
+
+desc student;
+
+SELECT studno, idnum, name, height, 
+LPAD(
+(CASE 
+WHEN height >= 180 THEN 'A'
+WHEN height Between 170 AND 180 THEN 'B' -- BETWEEN 170이상 179이하
+WHEN height Between 160 AND 170 THEN 'C' -- 키가 170이면 함수 순서 따르는거 알지?
+ELSE NVL(TO_CHAR(height),'미입력')
+END)
+,8) 키등급
+from student;
+
+--그룹함수
+--COUNT()
+select deptno,comm from professor;
+SELECT COUNT(comm) -- null값은 걸러서 카운트 함
+from professor
+where deptno=101;
+
+select deptno,comm from professor; -- 입력안된 보너스 갯수 구하기
+SELECT COUNT(NVL2(comm,null,0)) -- NVL2[(컬럼or값),지정한값이 null이아니라면반환값,null이라면 반환값]
+from professor
+where deptno=101;
+
+select count(*)
+from professor
+where deptno =101 and comm is null; --> 흠 이게 위 보다 훨씬 간단하네
+
+desc professor;
+
+-- AVG(), SUM()
+select count(*) from student;
+
+select * from student;
+
+select ROUND(AVG(weight),2), SUM(weight)/16 -- AVG할때 null값은 고려안하네
+from student;
+
+--MAX(), MIN() --> 예도 당연히 null값 제외
+select MAX(height), MIN(height)
+from student
+where deptno =101;
+
+-- GROUP BY
+SELECT deptno, COUNT(*), COUNT(comm)
+from professor
+GROUP BY deptno;--그룹함수 쓰면 릴레이션 한개로되서 동시에 2개 쓸려면
+                -- Group by로 특정 컬럼의 값으로 묶어야 함
+                --> 그룹함수의 매개변수는 그룹핑 안해도됨
+Select deptno, profno, comm
+from professor
+Order by deptno; -- 학과 오름차순으로 교수별 보너스 수당
+
+SELECT deptno, AVG(sal), MIN(sal), MAX(sal)
+from professor
+group by deptno; --> 학과번호로 그룹을 지어서라고 생각하면 편할듯
+desc student;
+
+
+select deptno, grade, COUNT(*), ROUND(AVG(weight)) --> 그룹함수랑 같이 컬럼 표현하려면,해당 컬럼이 group by로 묶어줘야함
+from student
+where weight is not null
+group by deptno, grade --> 그룹함수 개수당  group by 값을 맞추고
+order by deptno, grade;--> 순서 표현하려면,해당 컬럼이 group by로 묶은 값이여야함
+
+select AVG(weight)
+from student
+where weight is not null
+group by deptno;
+
+select name,grade,weight
+from student;
+
+--Having (그룹함수의 결과 값을 응용하기 위해?) Group by 뒤에
+SELECT grade, COUNT(*),ROUND(AVG(height)) 평균키, ROUND(AVG(weight))"평균 몸무게"
+FROM student
+GROUP BY grade
+HAVING COUNT(*)>=4
+ORDER by grade;
+
+SELECT grade, COUNT(*),ROUND(AVG(height)) 평균키, ROUND(AVG(weight)) "평균 몸무게"
+FROM student
+GROUP BY grade
+HAVING COUNT(*)>=4
+ORDER by "평균 몸무게"; -->되네?
+
+SELECT grade, COUNT(*),ROUND(AVG(height)) 평균키, ROUND(AVG(weight)) as "평균 몸무게"
+FROM student
+WHERE COUNT(*) >=4 -->group function is not allowed here 그룹함수 자체를 조건문에 못써서
+                   --> Having을 씀
+GROUP BY grade
+ORDER by 평균키; 
+
+--DISTINCT와 GROUP BY 차이
+select distinct deptno from student;
+select deptno from student group by deptno;
+  --> 둘의 결과가 같음
+
+
+--> 하지만 엄연히 중복제거, 그룹핑은 다름으로 각작의 용도에 맞게 쓰자
+----------------scott
+select * from tabs;
+select * from dept;
+select * from emp;  
+
+SELECT COUNT(DISTINCT d.deptno) "중복제거수",
+COUNT(d.deptno) "전체수"
+from dept d, emp e
+where e.deptno = d.deptno;
+
+SELECT deptno, MIN(sal)
+from emp
+group by deptno;
+
+select * from tabs;
+desc emp;
+select * from emp;
+
+select ename, deptno, 
+CASE
+WHEN deptno = 10 then 'New york'
+WHEN deptno = 20 then 'Dallas'
+ELSE 'UNKOWN'
+END
+From emp;
+
+-- DECODE는 조건이 ==일 경우에만 가능하네
+--select ename,sal,DECODE(sal, sal>=2900, '1등급',sal>=2700,'2등급',sal>=2000,'3등급') 급여등급
+--from emp
+--where job = 'MANAGER';
+
+select ename,sal,CASE 
+WHEN sal>=2900 then '1등급'
+WHEN sal>=2700 then'2등급'
+WHEN sal>=2000 then'3등급' 
+ELSE '불가촉천민'
+END 급여등급
+from emp
+where job = 'MANAGER' and (CASE 
+WHEN sal>=2900 then '1등급'
+WHEN sal>=2700 then'2등급'
+WHEN sal>=2000 then'3등급' 
+ELSE '불가촉천민'
+END) = '1등급';
+
+select * from emp;
+
+select ename, hiredate,CASE 
+WHEN (SUBSTR(TO_CHAR(hiredate,'mmdd'),1,2)BETWEEN 10 and 12) then '4분기'
+WHEN (SUBSTR(TO_CHAR(hiredate,'mmdd'),2,1)BETWEEN 1 and 3) then '1분기'
+WHEN (SUBSTR(TO_CHAR(hiredate,'mmdd'),2,1)BETWEEN 4 and 6) then '2분기'
+WHEN (SUBSTR(TO_CHAR(hiredate,'mmdd'),2,1)BETWEEN 7 and 9) then '3분기'
+ELSE '응애!'
+END 입사분기
+from emp
+where job = 'MANAGER';
+
+select ename, hiredate, TO_CHAR(hiredate,'q') from emp; -->와 'q' 이거 분기 범위네
+
+select empno, ename, job ,sal, CASE 
+WHEN job = 'CLERK' then round(sal*1.2)
+WHEN job = 'MANAGER' then round(sal*1.5)
+ELSE sal
+END "인상된 급여"
+from emp;
+
+--COUNT함수
+SELECT COUNT(*) 전체인원수 , COUNT(mgr) "매니저가 있는 직원수",COUNT(DISTINCT job) 업무갯수
+from emp;
