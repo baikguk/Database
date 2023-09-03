@@ -1,0 +1,212 @@
+-- subquery : query 문 속에 작성하는 query 문
+
+-- 교수테이블에서 전은지 교수와 같은 직위를 가진
+-- 교수들의 이름과 직위를 출력하세요
+
+SELECT position
+FROM professor
+WHERE name = '전은지';
+
+SELECT name, position
+FROM professor
+WHERE position = '전임강사';
+
+SELECT name, position
+FROM professor
+WHERE position = (SELECT position
+                  FROM professor
+                  WHERE name = '전은지');
+
+
+-- = 연산자를 사용한 단일행 qubquery
+-- 아이디가 'jun123' 인 학생과 같은 학년 학생들의
+-- 학번, 이름, 학년, 아이디를 출력하세요
+
+
+-- 1) 아이디가 'jun123' 인 학생의 학년
+SELECT grade
+FROM student
+WHERE userid= 'jun123';
+
+-- 2) main query 작성
+SELECT studno, name, grade, userid
+FROM student
+WHERE grade = '4';
+
+-- subquery 사용하기
+SELECT studno, name, grade, userid
+FROM student
+WHERE grade =  (SELECT grade
+                FROM student
+                WHERE userid= 'jun123');
+
+
+-- < 연산자를 사용한 단일행 qubquery
+-- 101 번 학과 학생들의 평균 몸무게 보다 적은 
+-- 학생들의 이름, 학과번호, 몸무게를 출력하세요
+
+-- 1) 101 번 학과 학생들의 평균 몸무게 구하기
+SELECT AVG(weight)
+FROM student
+WHERE deptno = 101;
+
+-- 2) main query 작성하기
+SELECT name, deptno, weight
+FROM student
+WHERE weight < 68;
+
+-- subquery 사용하기
+SELECT name, deptno, weight
+FROM student
+WHERE weight < (SELECT AVG(weight)
+                FROM student
+                WHERE deptno = 101);
+
+SELECT * FROM student;
+-- 20101 번 학생과 학년이 같고
+-- 20101 번 학생보다 키가 큰 학생들의
+-- 이름, 학년, 키를 출력하세요
+
+-- 1) subquery 두 개 작성 (조건이 두 개임)
+-- 20101 번 학생의 학년 - 1 학년
+-- 20101 번 학생의 키   - 172 cm
+SELECT grade
+FROM student
+WHERE studno = 20101;
+
+SELECT height
+FROM student
+WHERE studno = 20101;
+
+-- 2) main query 작성
+SELECT name, grade, height
+FROM student
+WHERE grade = 1 
+  AND height > 172;
+  
+-- subquery 사용
+SELECT name, grade, height
+FROM student
+WHERE grade = (SELECT grade
+                FROM student
+                WHERE studno = 20101) 
+  AND height > (SELECT height
+                FROM student
+                WHERE studno = 20101);
+    
+  
+/*
+  단일행 subquery : subquery 의 결괏값이 하나인 경우
+  다중행 subquery : subquery 의 결괏값이 여러 개인 경우
+*/  
+-- IN 연산자를 사용한 다중행 subquery
+
+-- 정보미디어학부에 소속된 모든 학생의 
+-- 학번, 이름, 학과번호를 출력하세요
+
+
+SELECT DISTINCT deptno
+FROM student
+WHERE deptno IN (101, 102);
+
+/*
+    101	컴퓨터공학과	100	1호관
+    102	멀티미디어학과	100	2호관
+    201	전자공학과	200	3호관
+    202	기계공학과	200	4호관
+    100	정보미디어학부	10	
+    200	메카트로닉스학부	10	
+    10	공과대학		
+*/
+
+-- 1) 정보미디어학부에 속한 학과들의 학과번호 구하기
+-- 학과테이블을 조회해서 정보미디어학부에 속한 학과들의 학과번호를 구함
+-- 정보미디어학부에 속한 학과들은 컴퓨터공학과, 멀티미디어학과로
+-- 이 학과들의 학과번호는 101, 102 번임
+SELECT * FROM department;
+
+-- 2) main query 작성하기
+SELECT name, grade, deptno
+FROM student
+WHERE deptno IN (101, 102);
+
+-- subquery 사용
+SELECT name, grade, deptno
+FROM student
+WHERE deptno IN (SELECT DISTINCT deptno
+                 FROM student
+                 WHERE deptno IN (101, 102));
+
+/*
+        = ANY : 하나라도 만족하는 값이 있으면 결과를 retur함
+                IN 연산자와 같음
+        > ANY  : 값들 중 최솟값 보다 크면 결과를 return함
+        >= ANY : 값들 중 최솟값 보다 크거나 같으면 결과를 return함
+        < ANY  : 값들 중 최대값 보다 작으면 결과를 return함
+        <= ANY : 값들 중 최대값 보다 작거나 같으면 결과를 return함
+        !=(<>) ANY : 모든 값들 중 다른 값만 return함 (값이 하나인 경우)
+        
+        2000 > ANY(1000, 2000, 3000)  - TRUE  : ANY 값에 2000 보다 작은 값이 있음
+        2000 = ANY(1000, 2000, 3000)  - TRUE  : ANY 값에 같은 값이 있음
+        3000 < ANY(1000, 2000, 3000)  - FALSE : ANY 값에 3000 보다 큰 값이 없음
+
+        
+        = ALL : 모든 값들과 같아야 결과를 retur함 (값이 하나인 경우)
+        > ALL  : 값들 중 최댓값 보다 크면 결과를 return함
+        >= ALL : 값들 중 최댓값 보다 크거나 같으면 결과를 return함
+        < ALL  : 값들 중 최솟값 보다 작으면 결과를 return함
+        <= ALL : 값들 중 최솟값 보다 작거나 같으면 결과를 return함
+        !=(<>) ALL : 모든 값들과 다르면 결과를 return함
+        
+        2000 > ALL(1000, 2000, 3000)  - FALSE : 2000이 ALL의 모든 값보다 커야 함
+        2000 = ALL(1000, 2000, 3000)  - FALSE : 2000이 ALL의 모든 값과 같아야 함
+        5000 > ALL(1000, 2000, 3000)  - TRUE  : 5000이 ALL의 모든 값보다 커야 함        
+*/
+
+-- ANY 연산자 
+-- 4 학년 학생 중에서 키가 제일 작은 학생보다 
+-- 키가 큰 학생들의 학번, 이름, 키를 출력하세요
+
+-- 4 학년 학생들의 키 구하기 : 175, 176, 177
+SELECT height
+FROM student
+WHERE grade = '4';
+
+-- main query 작성
+-- > ANY  : 값들 중 최솟값 보다 크면 결과를 return함
+SELECT studno, name, height
+FROM student
+WHERE height > ANY(175, 176, 177)
+ORDER BY studno;
+
+-- subquery 사용하기
+-- > ANY  : 값들 중 최솟값 보다 크면 결과를 return함
+SELECT studno, name, height
+FROM student
+WHERE height > ANY(SELECT height
+                   FROM student
+                   WHERE grade = '4')
+ORDER BY studno;
+
+
+
+
+
+-- 4 학년 학생들의 키 구하기 : 175, 176, 177
+SELECT height
+FROM student
+WHERE grade = '4';
+
+SELECT studno, name, height
+FROM student
+WHERE height > ALL(SELECT height
+                   FROM student
+                   WHERE grade = '4')
+ORDER BY studno;
+
+/*
+    10106	서재진	186
+    20102	박동진	182
+    20104	조명훈	184
+*/
+
