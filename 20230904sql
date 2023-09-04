@@ -1,0 +1,369 @@
+-- 학번이 10108 번인 학생의 생년월일을 81/10/13 으로 수정하고
+-- 주민등록번호를 8110132157498  로 수정하세요
+SELECT studno, name, idnum, birthdate
+FROM student
+WHERE studno = 10108;
+
+UPDATE student
+   SET birthdate = '81/10/13',
+           idnum = '8110132157498'
+  WHERE studno = '10108';
+  
+-- sub query 를 사용해서
+-- 전은지 교수의 급여와 보직수당을
+-- 남은혁 교수의 급여와 보직수당과 
+-- 같도록 수정하세요
+
+SELECT * FROM professor;
+
+SELECT profno, name, sal, comm
+  FROM professor
+ WHERE name IN ('전은지', '남은혁');
+
+UPDATE professor
+   SET (sal, comm) = (SELECT sal, comm
+                        FROM professor
+                       WHERE name = '남은혁')
+  WHERE name = '전은지';
+  
+SELECT profno, name, sal, comm
+  FROM professor
+ WHERE name IN ('전은지', '남은혁');
+ 
+COMMIT; 
+
+-- sub query 를 사용해서
+-- 기계공학과에 속한 학생의 지도교수번호를
+-- 남은혁 교수의 교수 번호로 수정하세요
+
+-- 기계공학과에 속한 학생 : 글로벌 학생
+SELECT studno, name, profno, deptno
+  FROM student
+ WHERE deptno = (SELECT deptno
+                   FROM department
+                  WHERE dname ='기계공학과'); 
+
+-- 기계공학과 학과번호 : 202       
+SELECT deptno
+  FROM department
+ WHERE dname ='기계공학과';                  
+                  
+SELECT studno, name, profno, deptno
+  FROM student;
+    
+SELECT dname, deptno
+  FROM department;
+
+-- 남은혁 교수의 교수번호  :  9908
+SELECT name, profno
+  FROM professor
+ WHERE name = '남은혁'; 
+  
+UPDATE student
+   SET profno = (SELECT profno
+                   FROM professor
+                  WHERE name = '남은혁')
+ WHERE deptno = (SELECT deptno
+                   FROM department
+                  WHERE dname = '기계공학과'); 
+
+COMMIT;
+
+-- profno 가 9908 로 변경됨
+SELECT studno, name, profno
+  FROM student  
+ WHERE deptno = (SELECT deptno
+                   FROM department
+                  WHERE dname = '기계공학과'); 
+
+
+  
+-- DELETE [FROM]
+
+-- 학생 테이블에서 (student01) 
+-- 학번이 10101 인 학생의 data 를 삭제하세요
+
+SELECT * FROM student;
+  
+CREATE TABLE student01
+  AS SELECT * FROM student;
+  
+SELECT * FROM student01;  
+
+DELETE FROM student01
+WHERE studno = '10101';
+  
+SELECT * FROM student01;  
+  
+  
+-- 교수 테이블에서 (professor01)
+-- 컴퓨터공학과에 속한 모든 교수들의 정보를 삭제하세요
+ROLLBACK;
+
+SELECT * FROM department;
+
+CREATE TABLE professor01
+  AS SELECT * FROM professor;
+
+-- 컴퓨터공학과의 학과번호 : 101
+SELECT dname, deptno
+  FROM department;
+ 
+SELECT name, deptno FROM professor01;
+ 
+DELETE FROM professor01
+ WHERE deptno = (SELECT deptno
+                   FROM department
+                  WHERE dname = '컴퓨터공학과');
+                  
+SELECT dname, deptno
+  FROM department;                 
+
+-- 101 학과의 교수 정보가 모두 삭제됨  
+SELECT name, deptno FROM professor01;                  
+  
+  
+-- MERGE 
+
+SELECT * FROM professor01;
+
+-- professor 테이블에서 직급이 교수인 데이터를 검색해서
+-- professor02 테이블에 저장함
+CREATE TABLE professor02
+  AS SELECT *
+       FROM professor
+      WHERE position = '교수';
+      
+SELECT * FROM professor02;      
+SELECT * FROM professor;
+
+-- professor02 테이블에서 
+-- position 이 교수인 record 를
+-- position 을 명예교수로 수정하세요
+UPDATE professor02
+   SET position = '명예교수'
+ WHERE position = '교수';  
+
+SELECT * FROM professor02;      
+
+INSERT INTO professor02
+VALUES (9999, '아이티', 'it2022', '전임강사', 200, sysdate, 10, 101);
+
+SELECT * FROM professor02;      
+
+-- professor 테이블과 professor02 테이블 병합(merge)하기
+MERGE INTO professor p1
+USING professor02 p2
+   ON (p1.profno = p2.profno)
+ WHEN MATCHED THEN
+      UPDATE SET p1.position = p2.position
+ WHEN NOT MATCHED THEN
+      INSERT VALUES(p2.profno, p2.name, p2.userid, p2.position, p2.sal, p2.hiredate, p2.comm, p2.deptno);
+
+SELECT * FROM professor;      
+
+----scott
+SELECT * FROM tabs;
+
+CREATE TABLE EMP01 
+  AS SELECT * FROM EMP;
+  
+SELECT * FROM EMP01;
+
+-- 모든 사원의 부서번호를 30 번으로 수정하세요
+-- UPDATE SET 에서 WHERE 절을 사용하지 않으면
+-- 모든 행의 정보가 변경됨
+UPDATE EMP01 
+   SET deptno = 30;
+   
+SELECT ename, deptno FROM EMP01;   
+
+-- 모든 사원의 급여를 10% 인상된 금액으로 변경하세요
+SELECT ename, deptno, sal
+  FROM EMP01;   
+  
+  
+UPDATE EMP01
+   SET sal = sal * 1.1;
+
+SELECT ename, deptno, sal
+  FROM EMP01;   
+  
+ROLLBACK;
+  
+SELECT * FROM EMP01;
+
+UPDATE emp01
+   SET sal = sal * 1.1;
+
+SELECT ename, deptno, sal
+  FROM EMP01;  
+
+CREATE TABLE emp03 
+  AS SELECT * FROM emp;
+  
+SELECT * FROM emp03;
+
+-- emp03 에서
+-- 부서번호가 10 번인 사원들의 부서번호를
+-- 40 번으로 수정하세요
+
+SELECT ename, deptno
+  FROM emp03
+ WHERE deptno = 10; 
+
+UPDATE emp03
+   SET deptno = 40
+ WHERE deptno = 10;
+
+SELECT ename, deptno
+  FROM emp03
+ WHERE deptno = 10;
+
+SELECT ename, deptno
+  FROM emp03
+ WHERE deptno = 40;
+
+-- job 이 MANAGER 인 경우, 
+-- 급여를 20% 인상된 금액으로 수정하세요
+SELECT job FROM emp03;
+
+UPDATE emp03
+   SET sal = sal * 1.2
+ WHERE job = 'MANAGER';
+ 
+SELECT ename, job, sal
+  FROM emp03
+ORDER BY job;
+
+ROLLBACK;
+
+-- emp03 에서
+-- 1982 년에 입사한 사원의 입사일을
+-- 오늘 날짜로 수정하세요
+UPDATE emp03
+   SET hiredate = sysdate
+ WHERE SUBSTR(hiredate, 1, 2) = '82';  
+ 
+SELECT ename, hiredate, deptno, job
+  FROM emp03
+ORDER BY hiredate;
+  
+--  emp03 에서
+--  ALLEN 사원의 부서번호는 20으로,
+--  job 은 MANAGER 로 변경하세요
+SELECT ename, deptno, job
+  FROM emp03
+ WHERE ename = 'ALLEN';
+ 
+UPDATE emp03
+   SET deptno = 20,
+       job = 'MANAGER'
+ WHERE ename = 'ALLEN';      
+ 
+SELECT ename, deptno, job
+  FROM emp03
+ WHERE ename = 'ALLEN';
+ 
+SELECT ename, hiredate, sal, comm
+  FROM emp03;
+  
+-- WARD 사원의 입사일은 오늘 날짜로
+-- 급여는 2000  으로, 커미션은 1000 으로 수정하세요
+SELECT ename, hiredate, sal, comm
+  FROM emp03
+ WHERE ename = 'WARD'; 
+  
+UPDATE emp03
+   SET hiredate = sysdate,
+            sal = 2000,
+           comm = 1000
+ WHERE ename = 'WARD';            
+ 
+SELECT ename, hiredate, sal, comm
+  FROM emp03
+ WHERE ename = 'WARD'; 
+  
+ 
+-- dept01 에서
+-- 20 번 부서의 지역이름을 40 번 부서의 지역 이름과
+-- 같도록 수정하세요
+
+CREATE TABLE dept01 
+  AS SELECT * FROM dept;
+
+SELECT deptno, dname, loc
+  FROM  dept01; 
+
+UPDATE dept01
+   SET loc = (SELECT loc
+                FROM dept01
+               WHERE deptno = 40)
+ WHERE deptno = 20;
+
+SELECT deptno, dname, loc
+  FROM  dept01;  
+
+ 
+-- dept01 에서 부서번호가 20인 부서의 정보를 삭제하세요
+SELECT deptno, dname, loc
+  FROM  dept01;
+
+DELETE FROM dept01
+ WHERE deptno = 20; 
+
+SELECT deptno, dname, loc
+  FROM  dept01;
+
+-- dept01 에서 10 번 부서에서 근무하는 사원들의 
+-- 근무지역과 같은 지역인 부서의 정보를 삭제하세요
+
+SELECT deptno, loc
+  FROM dept
+ WHERE deptno = 10;
+ 
+SELECT ename, deptno
+  FROM emp03;
+  
+DELETE FROM dept01
+ WHERE loc = (SELECT loc
+                FROM dept01
+               WHERE deptno = 10); 
+               
+SELECT dname, deptno, loc
+  FROM dept01;
+  
+  
+-- MERGE
+
+-- MERGE 를 사용해서 emp04 테이블에 SCOTT 이라는 사원 정보 추가하기
+-- 사원이름 SCOTT, 사원번호 7788, 부서번호 20
+
+CREATE TABLE emp04
+  AS SELECT * FROM emp;
+
+SELECT * FROM emp04;
+
+MERGE INTO emp04 e
+USING dual
+   ON (e.empno = 7788)
+ WHEN MATCHED THEN
+      UPDATE
+         SET e.deptno = 20, e.job = 'ANALYST' 
+ WHEN NOT MATCHED THEN
+      INSERT (e.empno, e.ename, e.deptno, e.job)
+      VALUES (7788, 'SCOTT', 20, 'ANALYST');
+      
+SELECT * FROM emp04;      
+      
+
+-- 사원번호가 7788 이면서 업무가 ANALYST 이면
+-- 부서번호를 30으로 변경하고 
+MERGE INTO emp04 e
+USING dual
+   ON (e.empno = 7788)
+ WHEN MATCHED THEN
+      UPDATE 
+         SET e.deptno = 30
+       WHERE e.job = 'ANALYST';
+SELECT * FROM emp04;       
