@@ -1,0 +1,63 @@
+--'경제' 카테고리에 속하는 도서들의 도서 ID(BOOK_ID), 저자명(AUTHOR_NAME), 출판일(PUBLISHED_DATE) 리스트를 출력하는 SQL문을 작성해주세요.
+--결과는 출판일을 기준으로 오름차순 정렬해주세요.
+SELECT b.BOOK_ID, a.AUTHOR_NAME, TO_CHAR(b.PUBLISHED_DATE,'YYYY-MM-DD') as PUBLISHED_DATE
+FROM BOOK b, AUTHOR a
+WHERE b.AUTHOR_ID = a.AUTHOR_ID AND b.CATEGORY='경제'
+ORDER BY PUBLISHED_DATE;
+
+--7월 아이스크림 총 주문량과 상반기의 아이스크림 총 주문량을 더한 값이 큰 순서대로 상위 3개의 맛을 조회하는 SQL 문을 작성해주세요.
+SELECT FLAVOR
+FROM
+(
+    SELECT F.FLAVOR,SUM(F.TOTAL_ORDER)+SUM(J.TOTAL_ORDER)
+    FROM FIRST_HALF F, (SELECT FLAVOR,SUM(TOTAL_ORDER) AS TOTAL_ORDER
+                        FROM JULY
+                        GROUP BY FLAVOR) J
+    WHERE F.FLAVOR = J.FLAVOR
+    GROUP BY F.FLAVOR
+    ORDER BY 2 DESC
+)
+WHERE ROWNUM<=3
+
+-- SELECT FLAVOR, SUM(TOTAL_ORDER)
+-- FROM JULY
+-- GROUP BY FLAVOR
+
+
+-- SELECT * 
+-- FROM FIRST_HALF F INNER JOIN JULY J
+-- ON F.FLAVOR = J.FLAVOR
+
+
+
+--천재지변으로 인해 일부 데이터가 유실되었습니다. 입양을 간 기록은 있는데, 보호소에 들어온 기록이 없는 동물의 ID와 이름을 ID 순으로 조회하는 SQL문을 작성해주세요
+SELECT o.ANIMAL_ID, o.NAME
+FROM ANIMAL_INS i, ANIMAL_OUTS o
+WHERE o.ANIMAL_ID = i.ANIMAL_ID(+) AND i.ANIMAL_ID IS NULL
+ORDER BY 1
+
+
+--관리자의 실수로 일부 동물의 입양일이 잘못 입력되었습니다. 보호 시작일보다 입양일이 더 빠른 동물의 아이디와 이름을 조회하는 SQL문을 작성해주세요. 이때 결과는 보호 시작일이 빠른 순으로 조회해야합니다.
+SELECT I.ANIMAL_ID, I.NAME
+FROM ANIMAL_INS I, ANIMAL_OUTS O
+WHERE I.ANIMAL_ID = O.ANIMAL_ID 
+AND I.DATETIME > O.DATETIME
+ORDER BY I.DATETIME
+
+--아직 입양을 못 간 동물 중, 가장 오래 보호소에 있었던 동물 3마리의 이름과 보호 시작일을 조회하는 SQL문을 작성해주세요. 이때 결과는 보호 시작일 순으로 조회해야 합니다.
+SELECT *
+FROM
+(SELECT I.NAME, I.DATETIME 
+FROM ANIMAL_INS I LEFT JOIN ANIMAL_OUTS O ON I.ANIMAL_ID = O.ANIMAL_ID
+WHERE O.DATETIME IS NULL 
+ORDER BY I.DATETIME
+)
+WHERE ROWNUM<=3
+
+
+--PRODUCT 테이블과 OFFLINE_SALE 테이블에서 상품코드 별 매출액(판매가 * 판매량) 합계를 출력하는 SQL문을 작성해주세요. 결과는 매출액을 기준으로 내림차순 정렬해주시고 매출액이 같다면 상품코드를 기준으로 오름차순 정렬해주세요.
+SELECT p.PRODUCT_CODE, SUM(p.PRICE*s.sales_amount) as SALES
+FROM PRODUCT p, OFFLINE_SALE s
+WHERE p.PRODUCT_ID= s.PRODUCT_ID
+GROUP BY p.PRODUCT_CODE
+ORDER BY 2 DESC, 1 ASC;
